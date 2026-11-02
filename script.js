@@ -1,5 +1,5 @@
 /* everydayvalona – Verhalten der Seite (rechnen, speichern, anzeigen).
-   Eingebunden am Ende von index.html per <script src="script.js"></script>.
+   Eingebunden am Ende von index.html mit einem script-Tag (src="script.js").
    Es steht dort ganz unten, damit das HTML-Gerüst schon existiert, wenn das Skript es sucht. */
 
 /* ================= JAVASCRIPT: das Verhalten ================= */
@@ -17,7 +17,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 /* ---------- B. Grunddaten ---------- */
 // Die vier Töpfe: links der interne Kurzname, rechts der angezeigte Name
-const POTS = {spar:'Erspartes', inv:'Investiertes', fix:'Fixkosten', tag:'Alltag'};
+const POTS = {spar:'Notgroschen', inv:'Investments', fix:'Fixkosten', tag:'Tagesgeld'};
 // Farbe je Topf (für das Gesamt-Diagramm)
 const COL = {spar:'#9ccb93', inv:'#f2d66b', fix:'#d9bd8f', tag:'#cfe3a6'};
 
@@ -59,21 +59,21 @@ const inPeriod = e => v.mode==='m' ? e.date.slice(0,7)===v.m : e.date.slice(0,4)
 // Letzter Monat des Zeitraums (Jahresmodus: Dezember)
 const endM = () => v.mode==='m' ? v.m : year()+'-12';
 
-// STAND für Erspartes/Investiertes: zählt ALLE Einträge bis zum Monat "end" zusammen.
+// STAND für Notgroschen/Investments: zählt ALLE Einträge bis zum Monat "end" zusammen.
 // Genau das macht, dass diese Töpfe in die Folgemonate "rübergehen".
 // filter() wählt passende Einträge aus, reduce() addiert sie (Einnahme +, Ausgabe -).
 const bal = (p, end) =>
   S.entries.filter(e => e.pot===p && e.date.slice(0,7) <= end)
            .reduce((a,e) => a + (e.type==='in' ? e.amount : -e.amount), 0);
 
-// AUSGABEN für Fixkosten/Alltag: zählt NUR den gewählten Zeitraum.
+// AUSGABEN für Fixkosten/Tagesgeld: zählt NUR den gewählten Zeitraum.
 // Genau das macht, dass diese Töpfe sich jeden Monat "zurücksetzen".
 // f ist ein wählbarer Filter (Standard: inPeriod), die Jahrestabelle nutzt das für einzelne Monate.
 const spent = (p, f = inPeriod) =>
   S.entries.filter(e => e.pot===p && f(e))
            .reduce((a,e) => a + (e.type==='out' ? e.amount : -e.amount), 0);
 
-// Alltags-Budget: im Jahresmodus 12 Monate lang
+// Tagesgeld-Budget: im Jahresmodus 12 Monate lang
 const budget = () => S.goals.tag * (v.mode==='m' ? 1 : 12);
 
 /* ---------- E. Kreisdiagramm (selbst gezeichnet als SVG) ---------- */
@@ -114,7 +114,7 @@ window.setGoal = (k, val) => {
 
 /* ---------- F. Die Ansichten je Tab ---------- */
 function potView(p) {
-  // Erspartes & Investiertes: Fortschritt zum Ziel
+  // Notgroschen & Investments: Fortschritt zum Ziel
   if (p==='spar' || p==='inv') {
     const b = bal(p, endM());                         // aktueller Stand
     const g = S.goals[p];                             // Ziel
@@ -138,9 +138,9 @@ function potView(p) {
       + (parts.length ? legend(parts) : '<p class="empty">Noch keine Fixkosten eingetragen.</p>')
       + '<p class="empty">Setzt sich jeden Monat zurück.</p>';
   }
-  // Alltag: Budget minus Ausgaben
+  // Tagesgeld: Budget minus Ausgaben
   const sp = spent('tag'), bu = budget(), rest = bu - sp;
-  return `<h2>Alltag</h2>`
+  return `<h2>Tagesgeld</h2>`
     + donut([{v:sp, c: rest<0 ? '#e3a79d' : '#f2d66b'}, {v:Math.max(rest,0), c:'#cfe3a6'}], eur(rest), 'übrig von '+eur(bu))   // rot, wenn das Budget überschritten ist
     + legend([{l:'Ausgegeben', v:sp, c:'#f2d66b'}, {l:'Übrig', v:Math.max(rest,0), c:'#cfe3a6'}])
     + goalBox('tag', 'Monatsbudget in €')
@@ -169,7 +169,7 @@ function table() {
     const f = e => e.date.slice(0,7) === m;   // Filter: nur dieser eine Monat
     return `<tr><td>${new Date(m+'-01').toLocaleDateString('de-DE',{month:'long'})}</td><td>${eur(bal('spar',m))}</td><td>${eur(bal('inv',m))}</td><td>${eur(spent('fix',f))}</td><td>${eur(spent('tag',f))}</td></tr>`;
   }).join('');
-  return `<table><tr><th>Monat</th><th>Erspartes (Stand)</th><th>Investiertes (Stand)</th><th>Fixkosten</th><th>Alltag ausgegeben</th></tr>${rows}</table>`;
+  return `<table><tr><th>Monat</th><th>Notgroschen (Stand)</th><th>Investments (Stand)</th><th>Fixkosten</th><th>Tagesgeld ausgegeben</th></tr>${rows}</table>`;
 }
 
 // Liste der einzelnen Einträge (neueste oben)
@@ -191,8 +191,10 @@ function render() {
   // Tab-Buttons erzeugen, der aktive bekommt die Klasse "on"
   $('#tabs').innerHTML = [['all','Gesamt'], ...Object.entries(POTS)]
     .map(([k,n]) => `<button data-t="${k}" class="${v.tab===k ? 'on' : ''}">${n}</button>`).join('');
-  // Monat/Jahr-Schalter markieren
-  document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', b.dataset.m === v.mode));
+  // Lichtschalter: an = Jahr. aria-checked steuert die CSS-Darstellung (Knopf rechts/links) und sagt Screenreadern den Zustand.
+  $('#switch').setAttribute('aria-checked', v.mode === 'y');
+  $('#swM').classList.toggle('active', v.mode === 'm');   // gewählte Beschriftung fett
+  $('#swY').classList.toggle('active', v.mode === 'y');
   // Beschriftung der Navigation: "November 2026" oder "2026"
   $('#label').textContent = v.mode==='m'
     ? new Date(v.m+'-01').toLocaleDateString('de-DE', {month:'long', year:'numeric'})
@@ -208,7 +210,19 @@ function render() {
 /* ---------- H. Klicks und Eingaben verarbeiten ---------- */
 // Event Delegation: ein Listener am Container statt einer pro Button. Funktioniert auch für Buttons, die später neu erzeugt werden.
 $('#tabs').onclick = e => { if (e.target.dataset.t) { v.tab = e.target.dataset.t; render(); } };
-$('#seg').onclick  = e => { if (e.target.dataset.m) { v.mode = e.target.dataset.m; render(); } };
+// Lichtschalter: bei jedem Klick zwischen Monat ('m') und Jahr ('y') wechseln
+$('#switch').onclick = () => { v.mode = v.mode === 'm' ? 'y' : 'm'; render(); };
+
+// Lichtschalter im Formular: aus = Ausgabe, an = Einnahme.
+// Der Zustand steckt in aria-checked ("true"/"false"). Das ist die einzige Stelle, an der er gespeichert wird.
+// Beim Absenden lesen wir ihn wieder aus (siehe unten).
+const isIncome = () => $('#typeSwitch').getAttribute('aria-checked') === 'true';
+$('#typeSwitch').onclick = () => {
+  const on = !isIncome();                                  // Zustand umdrehen
+  $('#typeSwitch').setAttribute('aria-checked', on);
+  $('#swOut').classList.toggle('active', !on);             // gewählte Beschriftung fett
+  $('#swIn').classList.toggle('active', on);
+};
 
 // Pfeile: Monat bzw. Jahr um d (+1 / -1) verschieben, inklusive Wechsel über den Jahreswechsel
 const shift = d => {
@@ -227,7 +241,7 @@ function fillCats(sel) {
   $('#cat').innerHTML = S.cats[p].map(c => `<option>${esc(c)}</option>`).join('') + '<option value="__new">+ Neue Kategorie …</option>';
   if (sel) $('#cat').value = sel;   // optional direkt die neue Kategorie auswählen
 }
-// Start: Topf-Auswahl füllen, "Alltag" vorauswählen, heutiges Datum setzen
+// Start: Topf-Auswahl füllen, "Tagesgeld" vorauswählen, heutiges Datum setzen
 $('#pot').innerHTML = Object.entries(POTS).map(([k,n]) => `<option value="${k}">${n}</option>`).join('');
 $('#pot').value = 'tag'; fillCats(); $('#date').value = today;
 $('#pot').onchange = () => fillCats();   // anderer Topf = andere Kategorien
@@ -247,7 +261,7 @@ $('#f').onsubmit = e => {
   if (!amount || $('#cat').value === '__new') return;   // Sicherheitscheck
   S.entries.push({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),   // eindeutige Nummer, damit wir den Eintrag später löschen können
-    date: $('#date').value, pot: $('#pot').value, type: $('#type').value,
+    date: $('#date').value, pot: $('#pot').value, type: isIncome() ? 'in' : 'out',   // Schalter an = Einnahme ('in'), aus = Ausgabe ('out')
     cat: $('#cat').value, amount, note: $('#note').value.trim()
   });
   save();
