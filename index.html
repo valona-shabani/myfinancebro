@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--
+  everydayvalona – Budgetplaner
+  Eine Webseite besteht aus drei Teilen, hier in drei Dateien:
+    1. index.html  = das Gerüst (WAS ist da: Buttons, Formular, Platz für Diagramme)
+    2. style.css   = das Aussehen (WIE sieht es aus: Farben, Abstände, Layout)
+    3. script.js   = das Verhalten (WAS passiert: rechnen, speichern, anzeigen)
+-->
+<html lang="de">
+<head>
+<meta charset="utf-8"> <!-- damit Umlaute (ä, ö, ü) richtig angezeigt werden -->
+<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- sorgt dafür, dass die Seite auf dem Handy nicht winzig wirkt -->
+<title>everydayvalona</title>
+
+<link rel="stylesheet" href="style.css"> <!-- lädt das Aussehen aus style.css -->
+</head>
+
+<body>
+<!-- ================= HTML: das Gerüst =================
+     Viele Bereiche sind absichtlich leer (z.B. id="tabs", id="view").
+     Das JavaScript füllt sie später mit Inhalt. Die id ist wie eine Adresse,
+     über die JS das Element findet. -->
+<header><h1><span>everydayvalona</span></h1><p class="sub">my finance bro</p></header>
+<main>
+  <div class="bar">
+    <div class="tabs" id="tabs"></div> <!-- Tabs: Gesamt, Notgroschen, ... (werden vom JS erzeugt) -->
+    <!-- Lichtschalter: aus = Monat, an = Jahr.
+         role="switch" und aria-checked sagen Screenreadern, dass es ein An/Aus-Schalter ist. Das JS setzt aria-checked je nach Modus. -->
+    <div class="switch-wrap">
+      <span id="swM">Monat</span>
+      <button id="switch" class="switch" role="switch" aria-checked="false" aria-label="Zwischen Monat und Jahr umschalten"><span class="knob"></span></button>
+      <span id="swY">Jahr</span>
+    </div>
+  </div>
+  <div class="bar"><div class="nav"><button id="prev" aria-label="Zurück">‹</button><b id="label"></b><button id="next" aria-label="Weiter">›</button></div></div>
+
+  <div class="grid">
+    <section class="card" id="view"></section> <!-- hier erscheint das Diagramm -->
+    <section class="card">
+      <h2>Neuer Eintrag</h2>
+      <form id="f">
+        <!-- Art des Eintrags als Schalter: aus = Ausgabe, an = Einnahme.
+             WICHTIG: type="button". Ein Button in einem <form> ist sonst automatisch ein "Absenden"-Button. -->
+        <div class="field span-6">
+          <span>Art</span>
+          <div class="switch-wrap">
+            <span id="swOut" class="active">Ausgabe</span>
+            <button type="button" id="typeSwitch" class="switch type" role="switch" aria-checked="false" aria-label="Zwischen Ausgabe und Einnahme umschalten"><span class="knob"></span></button>
+            <span id="swIn">Einnahme</span>
+          </div>
+        </div>
+        <label class="span-3">Topf<select id="pot"></select></label>
+        <label class="span-3">Kategorie<select id="cat"></select></label>
+        <label class="span-2">Betrag in €<input id="amt" type="number" step="0.01" min="0.01" required></label> <!-- required = Browser verhindert leeres Absenden -->
+        <label class="span-2">Datum<input id="date" type="date" required></label>
+        <label class="span-2 note">Notiz<input id="note" type="text" placeholder="optional"></label>
+        <button>Eintrag speichern</button>
+      </form>
+    </section>
+  </div>
+
+  <section class="card full-card" id="yearbox" hidden><h2>Alle Monate im Überblick</h2><div class="wrap" id="table"></div></section>
+  <section class="card full-card"><h2>Einträge</h2><ul class="entries" id="list"></ul></section>
+</main>
+
+<script src="script.js"></script> <!-- lädt das Verhalten aus script.js -->
+</body>
+</html>

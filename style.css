@@ -1,0 +1,108 @@
+/* Eingebunden in index.html per <link rel="stylesheet" href="style.css"> */
+
+/* ============ 0. SCHRIFTART ============
+   TAN Mon Cheri ist keine Standardschrift. Der Browser kennt sie nur, wenn du die Schriftdatei
+   mitlieferst. @font-face sagt: "Unter dem Namen TAN Mon Cheri findest du die Schrift in dieser Datei".
+   Lege die Datei in den Ordner fonts/ und passe den Dateinamen unten an. */
+@font-face{
+  font-family:"TAN Mon Cheri";
+  src:url("fonts/TAN-MonCheri.woff2") format("woff2"),
+      url("fonts/TAN-MonCheri.otf") format("opentype");
+  font-display:swap;   /* zeigt zuerst die Ersatzschrift, bis die echte geladen ist */
+}
+
+/* ============ 1. FARBEN ============
+   CSS-Variablen (--name) werden einmal definiert und überall mit var(--name) benutzt.
+   Willst du eine Farbe ändern, musst du sie nur hier ändern. */
+:root{
+  --beige:#FAF7F0;   /* Seitenhintergrund */
+  --sand:#E3D6BF;    /* Rahmen und Linien */
+  --paper:#F0E9DC;   /* Karten-Hintergrund */
+  --green:#588157;   /* Grün (Buttons, aktiver Tab, Einnahmen) */
+  --yellow:#F6EBC4;  --yellow-d:#c9a935;  /* Gelb / dunkleres Gelb für den Rahmen */
+  --ink:#3b3a30;     /* Textfarbe */
+  --soft:#7d7a69;    /* Nebentext */
+  --red:#c4685a;     /* Ausgaben */
+  --font:Georgia,"Times New Roman",serif;                 /* Standardschrift für allen Text und alle Zahlen */
+  --font-display:"TAN Mon Cheri",Georgia,serif;           /* nur für Überschriften; Georgia als Ersatz, falls die Datei fehlt */
+}
+
+/* ============ 2. GRUNDLAGEN ============ */
+*{box-sizing:border-box} /* Padding und Rahmen zählen zur Breite dazu, das macht das Rechnen mit Größen einfacher */
+body{margin:0;background:var(--beige);color:var(--ink);font:16px/1.5 var(--font)}
+header{padding:28px 20px 8px;text-align:center}
+h1{margin:0;font:normal 400 2.4rem var(--font-display)}
+header p{margin:4px 0 0;color:var(--soft)}
+.sub{font-style:italic} /* "my finance bro" in Kursiv */
+main{max-width:980px;margin:0 auto;padding:12px 16px 48px} /* margin:auto zentriert den Inhalt */
+
+/* ============ 3. LEISTEN UND BUTTONS ============ */
+/* Flexbox: ordnet Elemente in einer Reihe an und bricht bei Platzmangel um (flex-wrap) */
+.bar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin:16px 0}
+.tabs,.nav{display:flex;gap:6px;flex-wrap:wrap}
+button,select,input{font:inherit;color:inherit} /* Formularelemente übernehmen sonst nicht die Schrift der Seite */
+.tabs button,.nav button{border:2px solid var(--sand);background:var(--paper);padding:7px 14px;border-radius:999px;cursor:pointer}
+.tabs button.on{background:var(--green);border-color:var(--green);color:#fff}  /* Klasse "on" = aktiver Tab (setzt das JS) */
+/* Sichtbarer Fokus-Rahmen für Tastatur-Bedienung (Barrierefreiheit) */
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.nav b{min-width:150px;text-align:center;align-self:center;font-family:var(--font)}
+
+/* ---- Lichtschalter Monat/Jahr ----
+   Der Schalter ist ein Button (der Hintergrund, die "Wippe") mit einem runden Knopf darin.
+   Der Knopf ist per position:absolute im Button platziert. Im Zustand "an" (aria-checked="true")
+   wird er mit translateX nach rechts verschoben. transition macht die Bewegung weich. */
+.switch-wrap{display:flex;align-items:center;gap:10px;color:var(--soft)}
+.switch-wrap .active{color:var(--ink);font-weight:bold} /* die gerade gewählte Beschriftung hervorheben */
+.switch{position:relative;width:58px;height:32px;padding:0;border-radius:999px;border:2px solid var(--yellow-d);background:var(--yellow);cursor:pointer;transition:background .2s}
+.knob{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:var(--green);transition:transform .2s}
+.switch[aria-checked="true"]{background:var(--sand)}
+.switch[aria-checked="true"] .knob{transform:translateX(26px)}
+/* Variante für Ausgabe/Einnahme: Knopf rot bei Ausgabe (aus), grün bei Einnahme (an) */
+.switch.type .knob{background:var(--red)}
+.switch.type[aria-checked="true"] .knob{background:var(--green)}
+.field .switch-wrap{min-height:40px} /* gleiche Höhe wie die Eingabefelder daneben */
+@media(prefers-reduced-motion:reduce){.switch,.knob{transition:none}} /* respektiert die Einstellung "weniger Bewegung" */
+
+/* ============ 4. KARTEN-LAYOUT ============ */
+/* Grid: zwei gleich breite Spalten (1fr 1fr). Auf schmalen Bildschirmen nur eine Spalte (Media Query) */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+/* Vier Werte bei border-radius = oben-links, oben-rechts, unten-rechts, unten-links: die eine kleine Ecke gibt den Karten Charakter */
+.card{background:var(--paper);border:2px solid var(--sand);border-radius:28px 28px 28px 8px;padding:20px}
+.card h2{margin:0 0 10px;font:normal 400 1.4rem var(--font-display)}
+.full-card{margin-top:20px}
+
+/* ============ 5. DIAGRAMM UND LEGENDE ============ */
+.donut{width:100%;max-width:260px;display:block;margin:0 auto}
+.c1{font:400 22px var(--font);fill:var(--ink)}   /* große Zahl in der Mitte (bei SVG-Text heißt die Farbe "fill") */
+.c2{font-size:11px;fill:var(--soft)}               /* kleine Beschriftung darunter */
+ul.leg{list-style:none;margin:12px 0 0;padding:0}
+ul.leg li{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed var(--sand)}
+ul.leg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px} /* der farbige Punkt */
+.goal{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.goal input{width:130px}
+
+/* ============ 6. FORMULAR UND LISTE ============ */
+input,select{background:#fff;border:2px solid var(--sand);border-radius:12px;padding:8px 10px;min-width:0}
+/* Formular-Raster mit 6 gleich breiten Spalten. Jedes Feld sagt, wie viele Spalten es belegt:
+   span-6 = ganze Zeile (Art), span-3 = halbe Zeile (Topf + Kategorie nebeneinander),
+   span-2 = ein Drittel (Betrag + Datum + Notiz nebeneinander). */
+form{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.span-6{grid-column:span 6}
+.span-3{grid-column:span 3}
+.span-2{grid-column:span 2}
+form input,form select{width:100%} /* Felder füllen ihre Spalte aus */
+/* Auf sehr schmalen Handys wäre ein Drittel zu eng: Betrag und Datum teilen sich eine Zeile, die Notiz bekommt eine eigene */
+@media(max-width:520px){.span-2{grid-column:span 3}.span-2.note{grid-column:span 6}}
+form label,.field{display:flex;flex-direction:column;font-size:.85rem;color:var(--soft);gap:3px}
+form > button{grid-column:1/-1;background:var(--green);color:#fff;border:0;border-radius:14px;padding:11px;cursor:pointer;font-weight:600} /* 1/-1 = über alle Spalten; "form >" trifft nur den Speichern-Button, nicht den Schalter im Formular */
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--sand)}
+th:first-child,td:first-child{text-align:left}
+.wrap{overflow-x:auto} /* Tabelle scrollt seitlich, statt die Seite zu sprengen */
+.entries{margin:0;padding:0}
+.entries li{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--sand);list-style:none}
+.entries small{color:var(--soft)}
+.in{color:var(--green)} .out{color:var(--red)}
+.del{border:0;background:none;cursor:pointer;color:var(--soft);font-size:1.1rem}
+.empty{color:var(--soft);padding:8px 0}
